@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商業計劃自測表 · AI 簡答版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c0a; --surface:rgba(16,34,28,0.55); --surface2:rgba(20,40,34,0.45);
+  --border:rgba(255,255,255,0.06); --edge:rgba(255,255,255,0.04);
+  --white:#e8f2ec; --light:#b8ccc2; --muted:#6e8e7c;
+  --accent:#2dd4a8; --accent2:#1a9e7a; --accent-glow:rgba(45,212,168,0.18);
+  --warn:#f0984a; --warn-glow:rgba(240,152,74,0.18);
+  --danger:#e0556a;
+  --radius:16px; --radius-sm:10px;
+  --font:'Noto Sans TC','Microsoft JhengHei','PingFang TC',sans-serif;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  font-family:var(--font); background:var(--bg); color:var(--white);
+  min-height:100vh; line-height:1.7; -webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;align-items:center;
+}
+body::before{
+  content:''; position:fixed; top:0;left:0;right:0;bottom:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(45,212,168,0.06) 0%, transparent 60%),
+             radial-gradient(ellipse at 80% 60%, rgba(240,152,74,0.04) 0%, transparent 50%),
+             radial-gradient(ellipse at 20% 80%, rgba(45,212,168,0.04) 0%, transparent 50%);
+  pointer-events:none; z-index:0;
+}
+.page{display:none;position:relative;z-index:1;width:100%;max-width:640px;flex:1}
+.page.active{display:flex;flex-direction:column}
+.page-center{justify-content:center;align-items:center;padding:40px 20px;text-align:center}
+
+/* ===== GLASS CARD ===== */
+.glass-card{
+  background:var(--surface); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:0 8px 40px rgba(0,0,0,0.5),inset 0 1px 0 var(--edge);
+  padding:40px 32px; width:100%;
+}
+.glass-card-sm{padding:24px 20px}
+@media(max-width:480px){.glass-card{padding:28px 18px}}
+
+/* ===== BUTTONS ===== */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-family:var(--font);font-size:0.95rem;font-weight:600;
+  padding:12px 28px;border-radius:99px;cursor:pointer;transition:all 0.25s;
+  border:none;letter-spacing:0.03em;
+}
+.btn-primary{background:var(--accent);color:#042018;box-shadow:0 4px 20px var(--accent-glow)}
+.btn-primary:hover{background:#3de0b4;transform:translateY(-1px);box-shadow:0 6px 28px rgba(45,212,168,0.3)}
+.btn-primary:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:transparent;color:var(--accent);border:1px solid rgba(45,212,168,0.3)}
+.btn-secondary:hover{background:rgba(45,212,168,0.08)}
+.btn-sm{padding:8px 18px;font-size:0.85rem}
+.btn-ghost{background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:var(--font);font-size:0.9rem;padding:6px 12px;transition:color 0.2s}
+.btn-ghost:hover{color:var(--accent)}
+.btn-warn{background:var(--warn);color:#1a0e04;box-shadow:0 4px 20px var(--warn-glow)}
+
+/* ===== WELCOME PAGE ===== */
+.welcome-badge{
+  display:inline-block;font-size:0.75rem;font-weight:500;letter-spacing:0.15em;
+  color:var(--accent);border:1px solid rgba(45,212,168,0.25);
+  border-radius:99px;padding:5px 14px;margin-bottom:24px;
+}
+.welcome-title{font-size:2rem;font-weight:700;letter-spacing:0.03em;margin-bottom:4px}
+.welcome-sub{font-size:0.95rem;color:var(--muted);margin-bottom:28px}
+.welcome-features{display:flex;flex-direction:column;gap:12px;margin-bottom:28px;text-align:left}
+.wf-item{
+  display:flex;align-items:center;gap:10px;font-size:0.88rem;color:var(--light);
+  background:var(--surface2);border-radius:var(--radius-sm);padding:11px 14px;
+  border:1px solid var(--border);
+}
+.wf-icon{font-size:1.2rem;flex-shrink:0}
+.api-status{font-size:0.8rem;color:var(--muted);margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+.api-status-dot{width:8px;height:8px;border-radius:50%}
+.api-status-dot.set{background:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+.api-status-dot.unset{background:var(--warn);box-shadow:0 0 6px var(--warn-glow)}
+
+/* ===== SETTINGS OVERLAY ===== */
+.overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
+  justify-content:center;align-items:center;padding:20px}
+.overlay.active{display:flex}
+.overlay-card{
+  background:rgba(18,38,32,0.95);backdrop-filter:blur(24px);
+  border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:0 16px 48px rgba(0,0,0,0.6);
+  padding:32px 24px;max-width:440px;width:100%
+}
+.overlay-title{font-size:1.05rem;font-weight:600;margin-bottom:6px}
+.overlay-desc{font-size:0.85rem;color:var(--muted);margin-bottom:18px;line-height:1.6}
+.input-field{
+  width:100%;padding:12px 15px;border-radius:var(--radius-sm);
+  background:rgba(0,0,0,0.3);border:1px solid var(--border);
+  color:var(--white);font-family:var(--font);font-size:0.9rem;
+  outline:none;transition:border-color 0.2s;
+}
+.input-field:focus{border-color:var(--accent)}
+.input-field::placeholder{color:var(--muted)}
+.overlay-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+.key-hint{font-size:0.75rem;color:var(--muted);margin-top:8px;line-height:1.5}
+.key-hint a{color:var(--accent);text-decoration:none}
+.key-hint a:hover{text-decoration:underline}
+
+/* ===== QUIZ PAGE ===== */
+#page-quiz{padding-bottom:40px}
+.quiz-top{
+  position:sticky;top:0;z-index:10;
+  background:rgba(8,12,10,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);padding:14px 20px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.quiz-top-row{display:flex;align-items:center;justify-content:space-between}
+.progress-text{font-size:0.85rem;font-weight:500;color:var(--light)}
+.progress-bar-wrap{width:100%;height:3px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden}
+.progress-bar-fill{height:100%;background:var(--accent);border-radius:99px;transition:width 0.4s ease}
+.q-dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.q-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);cursor:pointer;transition:all 0.2s}
+.q-dot.done{background:var(--accent);border-color:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+.q-dot.current{border-color:var(--accent);box-shadow:0 0 8px var(--accent-glow);background:rgba(45,212,168,0.15)}
+
+.quiz-body{flex:1;padding:20px;display:flex;flex-direction:column}
+.q-card{
+  background:var(--surface);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:0 4px 24px rgba(0,0,0,0.3),inset 0 1px 0 var(--edge);
+  padding:28px 24px;flex:1;display:flex;flex-direction:column;
+  transition:opacity 0.25s,transform 0.25s;
+}
+.q-card.fading{opacity:0;transform:translateY(8px)}
+.q-dim-label{font-size:0.75rem;font-weight:600;color:var(--accent);letter-spacing:0.1em;margin-bottom:12px}
+.q-title{font-size:1.05rem;font-weight:600;color:var(--white);margin-bottom:6px;line-height:1.5}
+.q-desc{font-size:0.88rem;color:var(--light);margin-bottom:20px;line-height:1.7}
+.q-textarea{
+  flex:1;min-height:140px;padding:14px 16px;border-radius:var(--radius-sm);
+  background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.1);
+  color:var(--white);font-family:var(--font);font-size:0.92rem;line-height:1.8;
+  outline:none;resize:none;transition:border-color 0.2s;
+}
+.q-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,212,168,0.08)}
+.q-textarea::placeholder{color:var(--muted)}
+.q-char-count{font-size:0.75rem;color:var(--muted);text-align:right;margin-top:6px}
+.q-nav{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
+.q-nav-center{justify-content:center}
+.q-hint{font-size:0.75rem;color:var(--muted)}
+
+/* ===== ANALYZING PAGE ===== */
+#page-analyzing{justify-content:center;align-items:center;text-align:center}
+.analyze-ring{
+  width:80px;height:80px;border-radius:50%;
+  border:3px solid rgba(45,212,168,0.15);
+  border-top-color:var(--accent);
+  animation:spin 1s linear infinite;
+  margin:0 auto 24px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.analyze-title{font-size:1.1rem;font-weight:600;margin-bottom:8px}
+.analyze-sub{font-size:0.88rem;color:var(--muted);margin-bottom:28px}
+.analyze-dots{display:flex;gap:8px;justify-content:center;margin-bottom:24px}
+.analyze-dot{width:8px;height:8px;border-radius:50%;background:rgba(45,212,168,0.2);animation:pulse 1.4s ease-in-out infinite}
+.analyze-dot:nth-child(2){animation-delay:0.2s}
+.analyze-dot:nth-child(3){animation-delay:0.4s}
+@keyframes pulse{0%,80%,100%{transform:scale(0.6);opacity:0.3}40%{transform:scale(1);opacity:1}}
+.analyze-error{color:var(--danger);font-size:0.9rem;margin-bottom:16px;display:none}
+.analyze-error.show{display:block}
+
+/* ===== RESULT PAGE ===== */
+#page-result{padding:32px 20px 60px}
+.result-inner{width:100%}
+.result-header{text-align:center;margin-bottom:24px}
+.result-label{font-size:0.8rem;color:var(--muted);letter-spacing:0.12em;margin-bottom:8px}
+.result-score{font-size:3rem;font-weight:700;color:var(--accent);line-height:1.1}
+.result-score span{font-size:1.2rem;color:var(--muted);font-weight:400}
+.result-tier{display:inline-block;font-size:0.85rem;font-weight:600;padding:4px 16px;border-radius:99px;background:var(--accent-glow);color:var(--accent);margin-top:8px}
+.result-ai-tag{display:inline-block;font-size:0.72rem;padding:3px 10px;border-radius:99px;background:rgba(240,152,74,0.12);color:var(--warn);margin-top:8px;margin-left:6px}
+.radar-wrap{
+  background:var(--surface);backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:0 4px 24px rgba(0,0,0,0.3),inset 0 1px 0 var(--edge);
+  padding:12px;display:flex;justify-content:center;margin-bottom:24px;
+}
+.radar-wrap canvas{max-width:100%;height:auto}
+
+.section-title{font-size:0.85rem;font-weight:600;color:var(--muted);letter-spacing:0.08em;margin-bottom:12px;padding-left:4px}
+.dim-bars{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.dim-bar-row{display:flex;align-items:center;gap:10px}
+.dim-bar-label{width:68px;font-size:0.8rem;color:var(--light);text-align:right;flex-shrink:0}
+.dim-bar-track{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden}
+.dim-bar-fill{height:100%;border-radius:99px;transition:width 0.8s ease}
+.dim-bar-fill.low{background:var(--warn);box-shadow:0 0 8px var(--warn-glow)}
+.dim-bar-fill.mid{background:var(--accent);opacity:0.7}
+.dim-bar-fill.high{background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
+.dim-bar-score{width:28px;font-size:0.85rem;font-weight:600;color:var(--white);text-align:center}
+
+.advice-section{
+  background:var(--surface);backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:0 4px 24px rgba(0,0,0,0.3),inset 0 1px 0 var(--edge);
+  padding:20px;margin-bottom:16px;
+}
+.advice-section.focus{border-color:rgba(240,152,74,0.2)}
+.advice-section.strength{border-color:rgba(45,212,168,0.15)}
+.advice-label{font-size:0.75rem;font-weight:600;letter-spacing:0.08em;margin-bottom:10px}
+.advice-label.warn{color:var(--warn)}
+.advice-label.good{color:var(--accent)}
+.advice-title{font-size:0.95rem;font-weight:600;margin-bottom:10px;color:var(--white)}
+.advice-text{font-size:0.88rem;color:var(--light);line-height:1.7;margin-bottom:6px}
+.advice-text:last-child{margin-bottom:0}
+.advice-dim-name{color:var(--accent);font-weight:500}
+.result-actions{display:flex;gap:12px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+.dim-advice-list{display:flex;flex-direction:column;gap:10px}
+.dim-advice-item{padding:10px 14px;background:rgba(0,0,0,0.2);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.dim-advice-item strong{color:var(--accent)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:480px){
+  .welcome-title{font-size:1.6rem}
+  .quiz-top{padding:10px 12px}
+  .quiz-body{padding:14px 12px}
+  .q-card{padding:20px 16px}
+  .q-title{font-size:0.95rem}
+  .q-textarea{min-height:120px;font-size:0.88rem}
+  .result-score{font-size:2.4rem}
+  .dim-bar-label{width:56px;font-size:0.75rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== WELCOME PAGE ==================== -->
+<div class="page active page-center" id="page-welcome">
+  <div class="glass-card">
+    <div class="welcome-badge">商業工具 · AI 診斷版</div>
+    <h1 class="welcome-title">商業計劃<br>自測表</h1>
+    <p class="welcome-sub">12 道簡答題 · AI 深度分析 · 個人化建議</p>
+    <div class="welcome-features">
+      <div class="wf-item"><span class="wf-icon">✍️</span>12 道開放式簡答題，寫出你真實的商業現狀</div>
+      <div class="wf-item"><span class="wf-icon">🤖</span>AI 逐題分析，自動生成 12 維度評分與雷達圖</div>
+      <div class="wf-item"><span class="wf-icon">🎯</span>針對你的具體情況，產出個人化改善建議</div>
+    </div>
+    <button class="btn btn-primary" onclick="startQuiz()">開始測評 →</button>
+    <button class="btn btn-secondary btn-sm" onclick="startAutoFill()" style="margin-top:12px">⚡ 自動填充示範答案（每題15秒）</button>
+    <div class="api-status" id="api-status">
+      <span class="api-status-dot" id="api-dot"></span>
+      <span id="api-status-text">尚未設定 API Key</span>
+    </div>
+    <button class="btn btn-sm btn-secondary" style="margin-top:12px" onclick="openSettings()">設定 API Key</button>
+  </div>
+</div>
+
+<!-- ==================== SETTINGS OVERLAY ==================== -->
+<div class="overlay" id="settings-overlay">
+  <div class="overlay-card">
+    <div class="overlay-title">設定 API</div>
+    <div class="overlay-desc">輸入你的 DeepSeek API Key 以啟用 AI 分析。Key 只存在你的瀏覽器中，不會上傳到任何伺服器。</div>
+    <input class="input-field" id="api-key-input" type="password" placeholder="sk-...">
+    <div style="margin-top:12px">
+      <label style="font-size:0.8rem;color:var(--muted)">API 代理地址（可選，留空自動偵測）</label>
+      <input class="input-field" id="api-url-input" type="text" placeholder="https://your-worker.workers.dev 或 http://localhost:8765" style="margin-top:4px;font-size:0.85rem">
+    </div>
+    <div class="key-hint">
+      還沒有 Key？前往 <a href="https://platform.deepseek.com/" target="_blank">DeepSeek 開放平台</a> 申請（新用戶通常有免費額度）。<br>
+      分享給他人使用時需部署 API 代理（見專案內的 worker.js），否則只能用離線模式。
+    </div>
+    <div class="overlay-actions">
+      <button class="btn btn-sm btn-ghost" onclick="clearApiKey()">清除 Key</button>
+      <button class="btn btn-sm btn-ghost" onclick="closeSettings()">取消</button>
+      <button class="btn btn-sm btn-primary" onclick="saveApiKey()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== QUIZ PAGE ==================== -->
+<div class="page" id="page-quiz">
+  <div class="quiz-top">
+    <div class="quiz-top-row">
+      <button class="btn-ghost" onclick="confirmLeave()">← 返回</button>
+      <span class="progress-text" id="progress-text">第 1/12 題</span>
+      <button class="btn btn-sm btn-ghost" id="btn-autofill-cancel" style="display:none;color:var(--warn)" onclick="stopAutoFill()">⏹ 停止自動填充</button>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
+    <div class="q-dots" id="q-dots"></div>
+  </div>
+  <div class="quiz-body" id="quiz-body"></div>
+</div>
+
+<!-- ==================== ANALYZING PAGE ==================== -->
+<div class="page page-center" id="page-analyzing">
+  <div class="glass-card glass-card-sm">
+    <div class="analyze-ring"></div>
+    <div class="analyze-title">AI 正在分析你的商業計劃…</div>
+    <div class="analyze-sub">正在綜合評估 12 個維度，約需 10-20 秒</div>
+    <div class="analyze-dots"><span class="analyze-dot"></span><span class="analyze-dot"></span><span class="analyze-dot"></span></div>
+    <div class="analyze-error" id="analyze-error"></div>
+    <div id="analyze-actions" style="display:none">
+      <button class="btn btn-sm btn-primary" onclick="retryAnalysis()">重新分析</button>
+      <button class="btn btn-sm btn-secondary" style="margin-left:8px" onclick="fallbackAnalysis()">使用離線模式</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== RESULT PAGE ==================== -->
+<div class="page" id="page-result">
+  <div class="result-inner" id="result-inner"></div>
+</div>
+
+<script>
+// ==================== DATA ====================
+const DIMENSIONS = [
+  { id:'d1',  name:'客戶定位', short:'客戶' },
+  { id:'d2',  name:'價值主張', short:'價值' },
+  { id:'d3',  name:'流量獲客', short:'流量' },
+  { id:'d4',  name:'成交轉化', short:'轉化' },
+  { id:'d5',  name:'交付體驗', short:'交付' },
+  { id:'d6',  name:'客戶維繫', short:'維繫' },
+  { id:'d7',  name:'收入設計', short:'收入' },
+  { id:'d8',  name:'成本結構', short:'成本' },
+  { id:'d9',  name:'核心資源', short:'資源' },
+  { id:'d10', name:'關鍵動作', short:'動作' },
+  { id:'d11', name:'合作槓桿', short:'合作' },
+  { id:'d12', name:'數據迭代', short:'數據' }
+];
+
+const QUESTIONS = [
+  { dim:'客戶定位', text:'請描述你的目標客戶是誰——他們的年齡、職業、收入水平、消費習慣、活躍在哪些平台？越具體越好。' },
+  { dim:'價值主張', text:'你的產品或服務幫客戶解決了什麼痛點？客戶有多着急解決這個問題？他們現在是用什麼替代方案在應付？' },
+  { dim:'流量獲客', text:'你目前通過什麼渠道獲取客戶？線上還是線下為主？這些渠道是否穩定可複製？你清楚獲客成本嗎？' },
+  { dim:'成交轉化', text:'從客戶第一次接觸你到最終付款，中間經歷了哪些步驟？哪個環節最容易流失客戶？你的成交轉化率大概是多少？' },
+  { dim:'交付體驗', text:'客戶付款後，你的產品或服務如何送達他們手中？這個過程是否標準化？客戶满意度如何？你有收集反饋嗎？' },
+  { dim:'客戶維繫', text:'客戶買完一次後還會再買嗎？你有沒有主動維繫客戶的動作（社群、回訪、內容觸達）？客戶會推薦你給別人嗎？' },
+  { dim:'收入設計', text:'你的定價邏輯是什麼？是否有不同檔次的產品？收入結構是單次買賣還是包含訂閱／續費？利潤率如何？' },
+  { dim:'成本結構', text:'你的固定成本和可變成本分別是什麼？你清楚每賣出一單的利潤嗎？盈虧平衡點在哪裡？' },
+  { dim:'核心資源', text:'你生意中最不可替代的核心資源是什麼？是人、技術、供應鏈、客戶關係、還是數字資產（如社群／內容庫／數據）？' },
+  { dim:'關鍵動作', text:'你每天／每週最重要的 3 件事是什麼？你的時間主要花在哪些事情上？這些事情對生意增長的貢獻有多大？' },
+  { dim:'合作槓桿', text:'你現在有哪些外部合作夥伴？哪些環節你考慮外包或合作而非自己做？你有利用線上平台或工具來放大能力嗎？' },
+  { dim:'數據迭代', text:'你用什麼指標來判斷生意的好壞？你多久看一次數據？上一次因為數據的提示而改變一個重要決策是什麼時候？' }
+];
+
+// Keep old advice pool for fallback
+const ADVICE_FALLBACK = [
+  // Per-dimension advice (3 tiers each) - abbreviated for fallback
+  { low:'你的客戶畫像目前還很模糊。建議從已成交的客戶中找出最好的 3 個，為每個人寫一份詳細檔案，從中提煉共同特徵。',
+    mid:'客戶畫像已有雛形，下一步是用數據驗證你的直覺——用問卷或訪談確認客戶的真實特徵和行為。',
+    high:'客戶定位精準是你的優勢。警惕倖存者偏差——沒成交的人可能藏著新機會。下一步做客戶分層，針對高價值客戶深化服務。' },
+  { low:'價值主張不清晰是致命傷。做一次「電梯測試」：找 3 個人，30 秒內講清楚你提供的價值，看他們的反應。',
+    mid:'價值主張能被理解但還不夠銳利。找出「只有你能做，別人做不了」的那一件事，把它放大。',
+    high:'價值主張已受市場驗證。注意防止過度承諾——確保你說的每句話都能兌現。下一步測試不同版本的話術，找出轉化率最高的。' },
+  { low:'獲客渠道不明等於盲飛。選一個平台先做出 50 條內容，用實際數據而非猜測來判斷渠道效果。',
+    mid:'線上獲客已證明可行，接下來是規模化。把你的獲客流程畫成圖，找出最弱的一環。',
+    high:'獲客體系完善，但要警惕平台依賴。建立老帶新機制，讓客戶成為你的獲客渠道。多渠道佈局降低風險。' },
+  { low:'成交路徑要像水管一樣通暢。畫出客戶從接觸到付款的每一步，找出掉人最多的環節。',
+    mid:'成交流程基本跑通，現在關注轉化率。準備標準回覆模板，在成交環節加入風險逆轉（退款保證等）。',
+    high:'成交系統已是資產。下一步設計自動化成交序列，並檢查客單價是否被低估。' },
+  { low:'交付是信任兌現的時刻。把自己當客戶走一遍交付流程，你會發現很多你以為順暢的地方其實有坑。',
+    mid:'交付基本達標，現在追求峰值體驗。客戶記住的不是平均感受而是最好或最壞的瞬間。',
+    high:'交付是你的競爭優勢。下一步讓交付變成營銷——每次交付自然引導客戶到下一步（復購／推薦）。' },
+  { low:'你現在是漏水的水桶——花大精力獲客卻不維護老客戶。先從給所有老客戶發一條問候消息開始。',
+    mid:'已有維繫意識，現在需要系統化。建一個客戶跟進表，不要讓任何人掉出視線。',
+    high:'客戶維繫是基石。做一次 LTV 分析，如果老客戶貢獻能提升 20%，對生意的影響遠超增加獲客投入。' },
+  { low:'定價可能正在傷害你的生意。測試提高 20% 價格看客戶反應——多數創業者低估了自己產品的價值。',
+    mid:'收入結構已有雛形。思考產品線縱深化：前面有引流品讓客戶認識你，後面有利潤品深度解決問題。',
+    high:'收入結構健康。下一步關注收入可預測性——訂閱制、年費讓下月收入這個月就知道。' },
+  { low:'不知道錢花哪就不知道哪裡能省。先把上個月所有支出分類（固定vs可變、必要vs可選）。',
+    mid:'已有成本意識，下一步精細化。把可變成本攤到每單，你會發現利潤的真相。',
+    high:'成本控制能力強。從成本控制升級到結構優化——不是花得更少，而是花得更聰明。建立成本預警機制。' },
+  { low:'你目前最核心的資源可能就是你自己。從今天起每完成一件事，問自己：這成果能不能留下來變成資產？',
+    mid:'已有有價值資源但分散各處。把客戶數據、內容庫、合作資源整合到可檢索的地方。',
+    high:'資源積累豐富。小心資源沉睡——定期審視利用率，把不同資源組合成競品難複製的產品。' },
+  { low:'每天忙但生意沒變化＝假工作。每天早上寫下當天最重要的 1 件事，做完再開始其他的。',
+    mid:'已有時間管理意識。下一步把相似任務集中處理，問自己：最花時間的事如果不做一週，生意會受影響嗎？',
+    high:'執行力是核心優勢。現在需要做減法——有什麼事可以徹底不做？把關鍵動作 SOP 化後授權出去。' },
+  { low:'你不是超人。列出最不擅長但必須做的 3 件事——這些就是最該找合作或外包的環節。',
+    mid:'已有合作經驗，現在把合作從偶發變成機制。列出理想合作對象畫像，主動尋找。',
+    high:'合作網絡是核心優勢。下一步建立合作夥伴生態——讓合作夥伴之間也能互相賦能。' },
+  { low:'你現在在盲飛。從今天起只追蹤一個數字（如每日詢盤量），堅持一個月。一個數字就夠了。',
+    mid:'已在看數據但需形成閉環。每次看數據多問一句「所以呢？我接下來要做什麼不同的事？」',
+    high:'數據能力領先。下一步從描述過去升級到預測未來——用歷史數據預測下週／下月，提前部署。' }
+];
+
+const TIER_NAMES = ['創業探索期','雛形階段','成長期','成熟擴張期'];
+const OVERALL_FALLBACK = [
+  '你的商業計劃處於早期階段。現在不需要完美計劃，需要的是「最小可跑循環」——有人找到你，有人付錢給你。選一個最低風險的動作開始測試。',
+  '生意已有骨架但肌肉不夠壯。優先補齊得分最低的 2 個維度，同時把你靠直覺做對的事寫成流程。從手工作坊到流水線是這個階段最重要的躍遷。',
+  '商業基礎扎實。現在的挑戰不再是「知道」而是「做到極致」。差異化是核心話題——市場上不缺「還不錯」的商家，缺的是「獨一無二」。',
+  '商業計劃非常成熟。現在最大的敵人是內部的舒適感。思考第二曲線——在你現有基礎上還有什麼全新的增長可能？從做自己的生意到賦能一個生態。'
+];
+
+// ==================== STATE ====================
+let answers = {};          // { 'q0': 'answer text', ... }
+let currentQ = 0;          // 0-11
+let dimScores = [];
+let aiResult = null;
+let isFallback = false;
+let analysisInFlight = false;
+
+// ==================== API KEY MANAGEMENT ====================
+function getApiKey() { return localStorage.getItem('bizcheck_api_key') || ''; }
+function setApiKey(k) { localStorage.setItem('bizcheck_api_key', k); updateApiStatus(); }
+function clearApiKey() { localStorage.removeItem('bizcheck_api_key'); document.getElementById('api-key-input').value=''; updateApiStatus(); }
+
+function updateApiStatus() {
+  const key = getApiKey();
+  const dot = document.getElementById('api-dot');
+  const txt = document.getElementById('api-status-text');
+  if (dot && txt) {
+    dot.className = 'api-status-dot ' + (key ? 'set' : 'unset');
+    txt.textContent = key ? 'API Key 已設定 · AI 分析就緒' : '尚未設定 API Key · 將使用離線模式';
+  }
+}
+
+function openSettings() {
+  document.getElementById('api-key-input').value = getApiKey();
+  document.getElementById('api-url-input').value = localStorage.getItem('bizcheck_api_url') || '';
+  document.getElementById('settings-overlay').classList.add('active');
+}
+function closeSettings() { document.getElementById('settings-overlay').classList.remove('active'); }
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (val) setApiKey(val);
+  else clearApiKey();
+  const urlVal = document.getElementById('api-url-input').value.trim();
+  if (urlVal) localStorage.setItem('bizcheck_api_url', urlVal);
+  else localStorage.removeItem('bizcheck_api_url');
+  closeSettings();
+  updateApiStatus();
+}
+
+// ==================== PAGE SWITCHING ====================
+function switchPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + id);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ==================== QUIZ ====================
+function startQuiz() {
+  answers = {}; currentQ = 0; dimScores = []; aiResult = null; isFallback = false;
+  switchPage('quiz');
+  buildQuizUI();
+  renderCurrentQuestion();
+}
+
+function confirmLeave() {
+  const hasAnswers = Object.values(answers).some(a => a && a.trim());
+  if (hasAnswers && !confirm('返回首頁將清除所有答題進度，確定要返回嗎？')) return;
+  switchPage('welcome');
+}
+
+function buildQuizUI() {
+  const dots = document.getElementById('q-dots');
+  dots.innerHTML = Array.from({length:12}, (_,i) =>
+    `<div class="q-dot" id="qdot-${i}" onclick="jumpTo(${i})" title="第${i+1}題"></div>`
+  ).join('');
+}
+
+function renderCurrentQuestion() {
+  const q = QUESTIONS[currentQ];
+  const prevAns = answers['q'+currentQ] || '';
+  const answered = Object.values(answers).filter(a => a && a.trim()).length;
+
+  // Update progress
+  document.getElementById('progress-text').textContent = `第 ${currentQ+1}/12 題`;
+  document.getElementById('progress-bar').style.width = (answered / 12 * 100) + '%';
+
+  // Update dots
+  for (let i = 0; i < 12; i++) {
+    const dot = document.getElementById('qdot-'+i);
+    if (dot) {
+      dot.classList.remove('done','current');
+      if (answers['q'+i] && answers['q'+i].trim()) dot.classList.add('done');
+      if (i === currentQ) dot.classList.add('current');
+    }
+  }
+
+  // Render question card (textarea value set separately to avoid escaping issues)
+  const container = document.getElementById('quiz-body');
+  container.innerHTML = `
+    <div class="q-card" id="q-card">
+      <div class="q-dim-label">維度 ${String(currentQ+1).padStart(2,'0')} · ${q.dim}</div>
+      <div class="q-title">${q.text}</div>
+      <textarea class="q-textarea" id="q-input" placeholder="在此輸入你的回答…（愈具體愈好，AI 能給出更精準的分析）"
+        onkeydown="handleKeydown(event)"></textarea>
+      <div class="q-char-count"><span id="char-count">${prevAns.length}</span> 字</div>
+      <div class="q-nav ${currentQ === 11 ? 'q-nav-center' : ''}">
+        ${currentQ > 0
+          ? '<button class="btn btn-secondary btn-sm" onclick="prevQuestion()">← 上一題</button>'
+          : '<span></span>'}
+        ${currentQ < 11
+          ? '<button class="btn btn-primary btn-sm" id="btn-next" onclick="nextQuestion()">下一題 →</button>'
+          : '<button class="btn btn-primary" id="btn-submit" onclick="submitAll()">✓ 提交分析</button>'}
+      </div>
+      <p class="q-hint" style="margin-top:8px;text-align:center">Shift + Enter 換行 · 直接按 Enter 跳到下一題</p>
+    </div>
+  `;
+
+  // Set textarea value directly (safe from XSS and escaping issues)
+  const ta = document.getElementById('q-input');
+  if (ta) {
+    ta.value = prevAns;
+    ta.addEventListener('input', updateCharCount);
+    setTimeout(() => { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 150);
+  }
+}
+
+function updateCharCount() {
+  const ta = document.getElementById('q-input');
+  const cc = document.getElementById('char-count');
+  if (ta && cc) cc.textContent = ta.value.length;
+}
+
+function handleKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (currentQ < 11) nextQuestion();
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function saveCurrentAnswer() {
+  const ta = document.getElementById('q-input');
+  if (ta) answers['q'+currentQ] = ta.value;
+}
+
+function nextQuestion() {
+  saveCurrentAnswer();
+  stopAutoFill();
+  if (currentQ < 11) {
+    animateTransition(() => { currentQ++; renderCurrentQuestion(); });
+  }
+}
+
+function prevQuestion() {
+  saveCurrentAnswer();
+  stopAutoFill();
+  if (currentQ > 0) {
+    animateTransition(() => { currentQ--; renderCurrentQuestion(); });
+  }
+}
+
+function jumpTo(idx) {
+  saveCurrentAnswer();
+  stopAutoFill();
+  if (idx !== currentQ) {
+    currentQ = idx;
+    renderCurrentQuestion();
+    document.getElementById('q-card').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
+
+function animateTransition(fn) {
+  const card = document.getElementById('q-card');
+  if (card) { card.classList.add('fading'); }
+  setTimeout(() => {
+    fn();
+    setTimeout(() => {
+      const newCard = document.getElementById('q-card');
+      if (newCard) newCard.classList.remove('fading');
+    }, 50);
+  }, 200);
+}
+
+// ==================== AUTO-FILL DEMO ====================
+const DEMO_ANSWERS = [
+  '我的目標客戶是 25–35 歲、在職的程式設計初學者，月收入約 8,000–15,000 元人民幣，主要集中在一線和新一線城市。他們大多有大學學歷但非計算機專業，想通過轉行進入 IT 行業，或提升技能爭取加薪。消費習慣上，習慣為知識付費（買過網課），活躍在 B 站、知乎、小紅書和微信社群。',
+  '我的課程解決的核心痛點是：市面上的編程課要麼太貴（動輒上萬），要麼太淺（只教語法不教實戰）。學員學完還是寫不出能放在簡歷上的項目。他們很著急——很多人給自己定了 3–6 個月的轉行期限。目前的替代方案是看免費 YouTube/B 站教學 + 自己找開源項目模仿，但缺乏系統性和指導，容易放棄。',
+  '目前主要通過三個渠道：① 小紅書發技術科普圖文（免費，每天發 1–2 篇，粉絲約 8,000）；② B 站免費教學影片引流（每週 2 支，訂閱 1.2 萬）；③ 微信社群裂變（老學員推薦，約佔新客 25%）。線上為主。小紅書和 B 站流量不太穩定，受演算法影響大。獲客成本很低，主要是時間投入，暫時沒做付費投放，不清楚精確的 CAC。',
+  '客戶旅程：看到小紅書/B 站內容 → 關注帳號 → 加入免費微信社群 → 參加一次免費直播試聽課 → 購買正式課程。最容易流失的環節是「免費社群到直播試聽」——很多人加群後就沉默了。目前從試聽到購買的轉化率大約 12–15%，但從入群到試聽只有 8% 左右。',
+  '付款後學員立即收到邀請碼，登入小鵝通平台觀看錄播課程（共 48 節），每週有一次 Zoom 直播答疑。課程有標準化的大綱和作業體系，但作業批改還是我一個人做，高峰期會延遲 2–3 天。目前 NPS 約 42，學員普遍反映答疑回覆不夠及時。我有在每期課程結束後發問卷收集反饋。',
+  '約 30% 的學員會購買第二門課程（進階課），但目前沒有系統性的維繫動作。學完初階課後，大部分人就沉默了。有一個微信群但主要用來發通知，沒有持續的內容觸達。做過 3 次回訪但沒有固定頻率。口碑推薦有（約 25% 來自推薦），但沒有設計推薦獎勵機制。',
+  '定價：初階課 ¥1,299，進階課 ¥1,999，一對一項目指導 ¥4,999。目前以單次購買為主，沒有訂閱模式。考慮過會員制（月費 ¥199，包含所有課程 + 每週答疑），但還沒上線。初階課毛利約 85%（扣除平台手續費），但如果算上我自己的時間成本，利潤率大幅下降。',
+  '固定成本：小鵝通年費 ¥4,800、Zoom 年費 ¥1,200、域名服務器約 ¥2,000/年。可變成本：每單平台交易手續費約 5%、偶爾外包剪輯費用 ¥500–1,000/月。每賣出一單 ¥1,299 的課程，扣除手續費和分攤固定成本後，純利大約 ¥800–900。目前月銷量約 40–60 單，盈虧平衡點約 15 單/月（不含我自己的工資）。',
+  '最核心的資源是我自己的教學能力和行業口碑——我有 6 年一線開發經驗，在幾個技術社群有一定知名度。其次是積累的 200+ 小時課程影片和 50+ 個實戰項目案例庫。這些都是數字資產，但還沒系統性地整理和復用。社群（微信群 3,000+ 人）也是重要資產，但活躍度在下降。',
+  '每週最重要的 3 件事：① 錄製和剪輯 2 支 B 站影片（約 12–15 小時）；② 備課 + 直播答疑（約 6 小時）；③ 社群互動和潛在客戶私聊（約 8 小時）。時間主要花在內容生產上，但內容生產對增長的貢獻最大（帶來約 60% 新客戶）。社群互動和銷售轉化佔比太高，考慮自動化。',
+  '目前合作夥伴不多：和 2 位技術博主互相推薦課程，用微信和 Notion 管理內容。剪輯外包給一位 freelancer。考慮和更多技術公眾號做聯合推廣，以及在 GitHub 上開源一些教學項目來獲取開發者流量。還沒用過任何營銷自動化工具。',
+  '主要看的指標：月銷售額、各渠道新增粉絲數、試聽到購買轉化率、課程完成率（目前約 55%）。每週看一次後台數據，但沒有做 A/B 測試。上一次因數據改變決策是 3 個月前——發現 B 站影片的平均觀看時長只有 3 分鐘，就把影片從 20 分鐘縮短到 8–12 分鐘，觀看時長提升了 60%。'
+];
+
+let autoFillTimer = null;
+
+function startAutoFill() {
+  // If not in quiz, start it first
+  if (!document.getElementById('page-quiz').classList.contains('active')) {
+    startQuiz();
+    // Wait for DOM to settle, then begin from Q0
+    setTimeout(() => autoFillStep(0), 400);
+  } else {
+    autoFillStep(currentQ);
+  }
+  // Show cancel button
+  const btn = document.getElementById('btn-autofill-cancel');
+  if (btn) btn.style.display = 'inline-flex';
+}
+
+function autoFillStep(idx) {
+  if (idx >= 12) {
+    stopAutoFill();
+    return;
+  }
+
+  // Jump to this question
+  saveCurrentAnswer();
+  currentQ = idx;
+  renderCurrentQuestion();
+
+  // Wait for DOM render, then fill the textarea
+  setTimeout(() => {
+    answers['q' + idx] = DEMO_ANSWERS[idx];
+    const ta = document.getElementById('q-input');
+    if (ta) {
+      ta.value = DEMO_ANSWERS[idx];
+      updateCharCount();
+    }
+    // Update progress bar and dots
+    const answered = Object.values(answers).filter(a => a && a.trim()).length;
+    const bar = document.getElementById('progress-bar');
+    if (bar) bar.style.width = (answered / 12 * 100) + '%';
+    for (let i = 0; i < 12; i++) {
+      const dot = document.getElementById('qdot-' + i);
+      if (dot) {
+        dot.classList.remove('done', 'current');
+        if (answers['q' + i] && answers['q' + i].trim()) dot.classList.add('done');
+        if (i === currentQ) dot.classList.add('current');
+      }
+    }
+  }, 200);
+
+  // If not the last question, schedule next
+  if (idx < 11) {
+    autoFillTimer = setTimeout(() => autoFillStep(idx + 1), 15000);
+  } else {
+    // Last question filled — stop, don't submit
+    autoFillTimer = setTimeout(() => stopAutoFill(), 15000);
+  }
+}
+
+function stopAutoFill() {
+  if (autoFillTimer) { clearTimeout(autoFillTimer); autoFillTimer = null; }
+  const btn = document.getElementById('btn-autofill-cancel');
+  if (btn) btn.style.display = 'none';
+}
+
+// ==================== SUBMIT & ANALYZE ====================
+async function submitAll() {
+  saveCurrentAnswer();
+  const allAnswered = QUESTIONS.every((_, i) => answers['q'+i] && answers['q'+i].trim());
+  if (!allAnswered) {
+    const missing = QUESTIONS.findIndex((_, i) => !answers['q'+i] || !answers['q'+i].trim());
+    if (missing >= 0) {
+      currentQ = missing;
+      renderCurrentQuestion();
+      alert(`請先完成第 ${missing+1} 題的回答。`);
+      return;
+    }
+    return;
+  }
+
+  const apiKey = getApiKey();
+  switchPage('analyzing');
+  document.getElementById('analyze-error').classList.remove('show');
+  document.getElementById('analyze-actions').style.display = 'none';
+  analysisInFlight = true;
+
+  if (!apiKey) {
+    // No API key → use fallback directly
+    await new Promise(r => setTimeout(r, 800)); // brief pause for UX
+    fallbackAnalysis();
+    return;
+  }
+
+  try {
+    const result = await callAI(apiKey);
+    analysisInFlight = false;
+    aiResult = result;
+    isFallback = false;
+    dimScores = result.scores.map(s => s.score);
+    buildResultPage();
+    switchPage('result');
+    setTimeout(drawRadarChart, 300);
+  } catch (err) {
+    analysisInFlight = false;
+    console.error('API error:', err);
+    const errEl = document.getElementById('analyze-error');
+    errEl.textContent = 'AI 分析失敗：' + (err.message || '未知錯誤');
+    errEl.classList.add('show');
+    document.getElementById('analyze-actions').style.display = 'block';
+  }
+}
+
+async function retryAnalysis() {
+  document.getElementById('analyze-error').classList.remove('show');
+  document.getElementById('analyze-actions').style.display = 'none';
+  analysisInFlight = true;
+
+  const apiKey = getApiKey();
+  if (!apiKey) { fallbackAnalysis(); return; }
+
+  try {
+    const result = await callAI(apiKey);
+    analysisInFlight = false;
+    aiResult = result;
+    isFallback = false;
+    dimScores = result.scores.map(s => s.score);
+    buildResultPage();
+    switchPage('result');
+    setTimeout(drawRadarChart, 300);
+  } catch (err) {
+    analysisInFlight = false;
+    const errEl = document.getElementById('analyze-error');
+    errEl.textContent = '重試仍然失敗：' + (err.message || '未知錯誤') + ' · 建議使用離線模式';
+    errEl.classList.add('show');
+    document.getElementById('analyze-actions').style.display = 'block';
+  }
+}
+
+function fallbackAnalysis() {
+  analysisInFlight = false;
+  isFallback = true;
+  aiResult = null;
+
+  // Keyword-based scoring
+  dimScores = [];
+  const positiveKw = ['系統','數據','持續','標準','流程','明確','清晰','穩定','複購','推薦','社群','自動','工具','指標','測試','優化','SOP','ROI','利潤','定價','分層','訂閱'];
+  const negativeKw = ['不知道','不清楚','沒有','很少','偶爾','不穩定','混亂','模糊','摸索','差不多','大概'];
+
+  for (let i = 0; i < 12; i++) {
+    const ans = (answers['q'+i] || '').toLowerCase();
+    let score = 0;
+    let posHits = 0, negHits = 0;
+    for (const kw of positiveKw) { if (ans.includes(kw)) posHits++; }
+    for (const kw of negativeKw) { if (ans.includes(kw)) negHits++; }
+    // Score based on answer length and keyword analysis
+    const lenScore = Math.min(ans.length / 80, 3);
+    const kwScore = Math.max(0, 2 + posHits * 0.3 - negHits * 0.5);
+    score = Math.max(1, Math.min(5, Math.round((lenScore + kwScore) / 2 * 2) / 2));
+    dimScores.push(score);
+  }
+
+  buildResultPage();
+  switchPage('result');
+  setTimeout(drawRadarChart, 300);
+}
+
+// ==================== AI API (DeepSeek) ====================
+async function callAI(apiKey) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
+
+  // Build user message with all Q&A
+  let userMsg = '以下是我對 12 個商業維度問題的回答：\n\n';
+  for (let i = 0; i < 12; i++) {
+    userMsg += `${i+1}. ${QUESTIONS[i].dim}：${answers['q'+i]}\n\n`;
+  }
+  userMsg += '請分析並給出評分和建議。';
+
+  const systemPrompt = `你是商業計劃評估專家。你會收到一位創業者對 12 個商業維度問題的回答。
+請基於每個回答，對該維度評分（1-5分，1=非常薄弱，5=非常出色），
+並用繁體中文為每個維度寫 1-2 句具體可行的改善建議。
+
+同時請提供：
+- overallTier：綜合等級，四選一「創業探索期」「雛形階段」「成長期」「成熟擴張期」
+- overallAdvice：3-4 句綜合診斷建議
+- bottom2：最弱的 2 個維度名稱和針對性建議
+- top2：最強的 2 個維度名稱和槓桿放大建議
+- balanceNote：一句關於分數分布的判斷（長板驅動型／均衡型／有明顯短板需要注意）
+
+請嚴格按照以下 JSON 格式回覆（只回覆 JSON，不要其他任何內容）：
+{
+  "scores": [
+    { "dim": "客戶定位", "score": 3, "advice": "具體建議..." },
+    { "dim": "價值主張", "score": 4, "advice": "具體建議..." },
+    { "dim": "流量獲客", "score": 2, "advice": "具體建議..." },
+    { "dim": "成交轉化", "score": 3, "advice": "具體建議..." },
+    { "dim": "交付體驗", "score": 3, "advice": "具體建議..." },
+    { "dim": "客戶維繫", "score": 2, "advice": "具體建議..." },
+    { "dim": "收入設計", "score": 3, "advice": "具體建議..." },
+    { "dim": "成本結構", "score": 3, "advice": "具體建議..." },
+    { "dim": "核心資源", "score": 3, "advice": "具體建議..." },
+    { "dim": "關鍵動作", "score": 3, "advice": "具體建議..." },
+    { "dim": "合作槓桿", "score": 3, "advice": "具體建議..." },
+    { "dim": "數據迭代", "score": 2, "advice": "具體建議..." }
+  ],
+  "overallTier": "雛形階段",
+  "overallAdvice": "綜合建議...",
+  "bottom2": [
+    { "dim": "流量獲客", "advice": "針對性建議..." },
+    { "dim": "客戶維繫", "advice": "針對性建議..." }
+  ],
+  "top2": [
+    { "dim": "價值主張", "advice": "放大建議..." },
+    { "dim": "客戶定位", "advice": "放大建議..." }
+  ],
+  "balanceNote": "分數分布判斷..."
+}`;
+
+  // Build proxy endpoint list: user-configured → local → give up
+  const proxyURLs = [];
+  const customURL = localStorage.getItem('bizcheck_api_url');
+  if (customURL) proxyURLs.push(customURL.replace(/\/+$/, ''));
+  proxyURLs.push('http://localhost:8765'); // 本地代理兜底
+
+  const body = JSON.stringify({
+    model: 'deepseek-chat',
+    max_tokens: 2048,
+    temperature: 0.7,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMsg }
+    ]
+  });
+
+  let lastError = null;
+  let resp = null;
+  for (const baseURL of proxyURLs) {
+    try {
+      resp = await fetch(baseURL + '/deepseek/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
+        body,
+        signal: controller.signal
+      });
+      break; // 成功連線，跳出迴圈
+    } catch (e) {
+      lastError = e;
+      continue; // 嘗試下一個代理
+    }
+  }
+
+  clearTimeout(timeout);
+
+  if (!resp) {
+    // 所有代理都連不上
+    throw new Error('無法連接 API 代理，請確認已啟動本地代理（node api-proxy.js）或設定線上代理地址。將使用離線模式。');
+  }
+
+  if (!resp.ok) {
+    const errBody = await resp.text().catch(() => '');
+    if (resp.status === 401) throw new Error('API Key 無效，請檢查後重新設定');
+    if (resp.status === 429) throw new Error('請求過於頻繁，請稍後再試');
+    throw new Error(`API 錯誤 (${resp.status})：${errBody.slice(0,100)}`);
+  }
+
+  const data = await resp.json();
+  const content = data.choices?.[0]?.message?.content || '';
+  // Try to extract JSON from response (in case AI wraps it in ```json)
+  let jsonStr = content.trim();
+  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) jsonStr = jsonMatch[1].trim();
+  const parsed = JSON.parse(jsonStr);
+
+  // Validate
+  if (!parsed.scores || parsed.scores.length !== 12) throw new Error('AI 回傳的評分數據不完整');
+  return parsed;
+}
+
+// ==================== RESULT PAGE ====================
+function buildResultPage() {
+  const total = dimScores.reduce((a,b) => a+b, 0);
+  const avg = total / 12;
+
+  let tierName, overallAdvice, bottom2Advice, top2Advice, balanceNote, perDimAdvice;
+
+  if (isFallback || !aiResult) {
+    // Fallback mode
+    if (avg < 3) tierName = TIER_NAMES[0];
+    else if (avg < 4) tierName = TIER_NAMES[1];
+    else if (avg < 4.75) tierName = TIER_NAMES[2];
+    else tierName = TIER_NAMES[3];
+
+    const oaTier = avg<3?0:avg<4?1:avg<4.75?2:3;
+    overallAdvice = OVERALL_FALLBACK[oaTier];
+
+    const indexed = dimScores.map((s,i)=>({dim:i,score:s}));
+    indexed.sort((a,b)=>a.score-b.score);
+    const b2 = [indexed[0], indexed[1]];
+    const t2 = [indexed[11], indexed[10]];
+
+    perDimAdvice = dimScores.map((s,i)=>{
+      const tier = s<=2?0:s<=3?1:2;
+      const keys = ['low','mid','high'];
+      return ADVICE_FALLBACK[i] ? ADVICE_FALLBACK[i][keys[tier]] : '';
+    });
+
+    bottom2Advice = b2.map(b=>({
+      dim: DIMENSIONS[b.dim].name,
+      advice: ADVICE_FALLBACK[b.dim] ? ADVICE_FALLBACK[b.dim]['low'] : '需要重點改善。'
+    }));
+
+    top2Advice = t2.map(t=>({
+      dim: DIMENSIONS[t.dim].name,
+      advice: ADVICE_FALLBACK[t.dim] ? ADVICE_FALLBACK[t.dim]['high'] : '繼續保持並放大。'
+    }));
+
+    if (t2[0].score - b2[0].score >= 3) {
+      balanceNote = '你的優勢和短板差距明顯，這是一種「長板驅動型」生意模式——確保你的長板足夠長到客戶願意容忍你的短板。';
+    } else if (t2[0].score - b2[0].score <= 1) {
+      balanceNote = '你的各維度比較均衡，沒有明顯的短板也沒有突出的長板。建議選擇一個維度集中突破，做出一個「標誌性優勢」。';
+    } else {
+      balanceNote = '各維度分布合理，持續在現有基礎上精進即可。';
+    }
+  } else {
+    // AI mode
+    tierName = aiResult.overallTier || TIER_NAMES[0];
+    overallAdvice = aiResult.overallAdvice || '';
+    bottom2Advice = aiResult.bottom2 || [];
+    top2Advice = aiResult.top2 || [];
+    balanceNote = aiResult.balanceNote || '';
+    perDimAdvice = aiResult.scores.map(s => s.advice || '');
+  }
+
+  // Store for potential reuse
+  window._resultData = { total, avg, tierName, overallAdvice, bottom2Advice, top2Advice, balanceNote, perDimAdvice };
+
+  // Build per-dimension advice list
+  const dimAdviceHTML = perDimAdvice.map((adv, i) => {
+    const s = dimScores[i];
+    const cls = s < 3 ? 'low' : s < 4 ? 'mid' : 'high';
+    return `<div class="dim-advice-item">
+      <strong>${DIMENSIONS[i].name}</strong>（${s.toFixed(1)} 分）<br>
+      <span style="color:var(--light)">${adv}</span>
+    </div>`;
+  }).join('');
+
+  // Build dimension score bars
+  const barsHTML = dimScores.map((s,i) => {
+    const pct = s / 5 * 100;
+    const cls = s < 3 ? 'low' : s < 4 ? 'mid' : 'high';
+    return `<div class="dim-bar-row">
+      <span class="dim-bar-label">${DIMENSIONS[i].name}</span>
+      <div class="dim-bar-track"><div class="dim-bar-fill ${cls}" style="width:${pct}%"></div></div>
+      <span class="dim-bar-score">${s.toFixed(1)}</span>
+    </div>`;
+  }).join('');
+
+  // Build bottom2 advice
+  const b2HTML = Array.isArray(bottom2Advice) ? bottom2Advice.map(b =>
+    `<p class="advice-text"><span class="advice-dim-name">${b.dim}</span>：${b.advice}</p>`
+  ).join('') : `<p class="advice-text">${bottom2Advice}</p>`;
+
+  // Build top2 advice
+  const t2HTML = Array.isArray(top2Advice) ? top2Advice.map(t =>
+    `<p class="advice-text"><span class="advice-dim-name">${t.dim}</span>：${t.advice}</p>`
+  ).join('') : `<p class="advice-text">${top2Advice}</p>`;
+
+  document.getElementById('result-inner').innerHTML = `
+    <div class="result-header">
+      <div class="result-label">你的商業健康度</div>
+      <div class="result-score">${total.toFixed(0)}<span> / 60</span></div>
+      <div class="result-tier">${tierName}</div>
+      ${isFallback ? '<div class="result-ai-tag">⚡ 離線模式 · 基於關鍵詞分析</div>' : '<div class="result-ai-tag">🤖 AI 分析生成</div>'}
+    </div>
+
+    <div class="radar-wrap">
+      <canvas id="radar-canvas"></canvas>
+    </div>
+
+    <div class="section-title">分維度得分</div>
+    <div class="dim-bars">${barsHTML}</div>
+
+    <div class="advice-section focus">
+      <div class="advice-label warn">⚡ 優先關注區</div>
+      <div class="advice-title">以下維度建議優先改善：</div>
+      ${b2HTML}
+    </div>
+
+    <div class="advice-section strength">
+      <div class="advice-label good">★ 你的優勢區</div>
+      <div class="advice-title">以下維度表現最出色，繼續放大：</div>
+      ${t2HTML}
+    </div>
+
+    ${balanceNote ? `
+    <div class="advice-section">
+      <div class="advice-text">💡 ${balanceNote}</div>
+    </div>` : ''}
+
+    <div class="advice-section">
+      <div class="advice-label good">綜合診斷</div>
+      <div class="advice-text">${overallAdvice}</div>
+    </div>
+
+    <div class="advice-section">
+      <div class="advice-label good">各維度具體建議</div>
+      <div class="dim-advice-list">${dimAdviceHTML}</div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn btn-secondary" onclick="resetAndRestart()">重新測評</button>
+    </div>
+  `;
+}
+
+// ==================== RADAR CHART ====================
+function drawRadarChart() {
+  const canvas = document.getElementById('radar-canvas');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const size = 600;
+  const cssSize = Math.min(size, (window.innerWidth || 600) - 40);
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = cssSize + 'px';
+  canvas.style.height = cssSize + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const cx = size/2, cy = size/2, R = 210, n = 12;
+  const scoreR = s => (R/5) * Math.max(0.3, s);
+
+  // Background polygons
+  for (let lv = 1; lv <= 5; lv++) {
+    const r = (R/5) * lv;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI/2 + (2*Math.PI/n)*i;
+      const x = cx + r*Math.cos(a), y = cy + r*Math.sin(a);
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = lv===5?'rgba(255,255,255,0.12)':'rgba(255,255,255,0.05)';
+    ctx.lineWidth = lv===3?1.2:0.8;
+    ctx.setLineDash(lv===3?[4,6]:[]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Axes
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI/2 + (2*Math.PI/n)*i;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+R*Math.cos(a), cy+R*Math.sin(a));
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=0.7; ctx.stroke();
+  }
+
+  // Data polygon
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI/2 + (2*Math.PI/n)*i;
+    const r = scoreR(dimScores[i]);
+    const x = cx + r*Math.cos(a), y = cy + r*Math.sin(a);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+
+  const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  grad.addColorStop(0,'rgba(45,212,168,0.35)');
+  grad.addColorStop(0.6,'rgba(45,212,168,0.08)');
+  grad.addColorStop(1,'rgba(45,212,168,0.01)');
+  ctx.fillStyle=grad; ctx.fill();
+  ctx.strokeStyle='#2dd4a8'; ctx.lineWidth=2.2;
+  ctx.shadowColor='rgba(45,212,168,0.4)'; ctx.shadowBlur=12; ctx.stroke();
+  ctx.shadowBlur=0;
+
+  // Points
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI/2 + (2*Math.PI/n)*i;
+    const r = scoreR(dimScores[i]);
+    const x = cx + r*Math.cos(a), y = cy + r*Math.sin(a);
+    ctx.beginPath(); ctx.arc(x,y,5.5,0,Math.PI*2); ctx.fillStyle='#2dd4a8'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2); ctx.fillStyle='#042018'; ctx.fill();
+  }
+
+  // Labels
+  ctx.fillStyle='#b8ccc2'; ctx.font='13px "Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI/2 + (2*Math.PI/n)*i;
+    const lr = R+30, lx = cx+lr*Math.cos(a), ly = cy+lr*Math.sin(a);
+    ctx.fillText(DIMENSIONS[i].short,lx,ly);
+  }
+
+  // Center score
+  const total = dimScores.reduce((a,b)=>a+b,0);
+  ctx.fillStyle='#e8f2ec'; ctx.font='bold 34px "Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif';
+  ctx.fillText(total.toFixed(0),cx,cy-8);
+  ctx.font='13px "Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif';
+  ctx.fillStyle='#6e8e7c'; ctx.fillText('/ 60 分',cx,cy+22);
+}
+
+function resetAndRestart() {
+  answers = {}; currentQ = 0; dimScores = []; aiResult = null; isFallback = false;
+  switchPage('welcome');
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  switchPage('welcome');
+  updateApiStatus();
+
+  // Close overlay on backdrop click
+  document.getElementById('settings-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeSettings();
+  });
+
+  // Close overlay on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSettings();
+  });
+});
+
+// Handle page unload warning
+window.addEventListener('beforeunload', function(e) {
+  const hasAnswers = Object.values(answers).some(a => a && a.trim());
+  if (hasAnswers && !document.getElementById('page-result').classList.contains('active')) {
+    e.preventDefault();
+    e.returnValue = '你有未提交的回答，確定要離開嗎？';
+  }
+});
+</script>
+</body>
+</html>
