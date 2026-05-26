@@ -282,15 +282,15 @@ body::before{
 <div class="overlay" id="settings-overlay">
   <div class="overlay-card">
     <div class="overlay-title">設定 API</div>
-    <div class="overlay-desc">輸入你的 DeepSeek API Key 以啟用 AI 分析。Key 只存在你的瀏覽器中，不會上傳到任何伺服器。</div>
-    <input class="input-field" id="api-key-input" type="password" placeholder="sk-...">
+    <div class="overlay-desc">本工具已內建 AI 分析，<strong>無需填寫 API Key 即可直接使用</strong>。如果你想用自己的 DeepSeek Key（節省費用），可在此填入。</div>
+    <input class="input-field" id="api-key-input" type="password" placeholder="sk-...（可選，留空使用內建 AI）">
     <div style="margin-top:12px">
-      <label style="font-size:0.8rem;color:var(--muted)">API 代理地址（可選，留空自動偵測）</label>
-      <input class="input-field" id="api-url-input" type="text" placeholder="https://your-worker.workers.dev 或 http://localhost:8765" style="margin-top:4px;font-size:0.85rem">
+      <label style="font-size:0.8rem;color:var(--muted)">自訂 API 代理地址（可選）</label>
+      <input class="input-field" id="api-url-input" type="text" placeholder="https://your-worker.workers.dev" style="margin-top:4px;font-size:0.85rem">
     </div>
     <div class="key-hint">
-      還沒有 Key？前往 <a href="https://platform.deepseek.com/" target="_blank">DeepSeek 開放平台</a> 申請（新用戶通常有免費額度）。<br>
-      分享給他人使用時需部署 API 代理（見專案內的 worker.js），否則只能用離線模式。
+      內建 AI 由 Cloudflare Worker 驅動，使用 DeepSeek 模型進行分析。<br>
+      如果你想用自己的 Key：前往 <a href="https://platform.deepseek.com/" target="_blank">DeepSeek 開放平台</a> 申請。
     </div>
     <div class="overlay-actions">
       <button class="btn btn-sm btn-ghost" onclick="clearApiKey()">清除 Key</button>
@@ -434,7 +434,7 @@ function updateApiStatus() {
   const txt = document.getElementById('api-status-text');
   if (dot && txt) {
     dot.className = 'api-status-dot ' + (key ? 'set' : 'unset');
-    txt.textContent = key ? 'API Key 已設定 · AI 分析就緒' : '尚未設定 API Key · 將使用離線模式';
+    txt.textContent = key ? 'API Key 已設定 · 使用自有 Key 分析' : '內建 AI 已啟用 · 無需設定即可使用';
   }
 }
 
@@ -694,15 +694,15 @@ async function submitAll() {
   document.getElementById('analyze-actions').style.display = 'none';
   analysisInFlight = true;
 
-  if (!apiKey) {
-    // No API key → use fallback directly
-    await new Promise(r => setTimeout(r, 800)); // brief pause for UX
-    fallbackAnalysis();
-    return;
-  }
-
   try {
-    const result = await callAI(apiKey);
+    let result;
+    if (apiKey) {
+      // User has own API key → use proxy approach
+      result = await callAI(apiKey);
+    } else {
+      // No API key → use Worker's built-in AI
+      result = await callBuiltInAI();
+    }
     analysisInFlight = false;
     aiResult = result;
     isFallback = false;
@@ -725,11 +725,14 @@ async function retryAnalysis() {
   document.getElementById('analyze-actions').style.display = 'none';
   analysisInFlight = true;
 
-  const apiKey = getApiKey();
-  if (!apiKey) { fallbackAnalysis(); return; }
-
   try {
-    const result = await callAI(apiKey);
+    const apiKey = getApiKey();
+    let result;
+    if (apiKey) {
+      result = await callAI(apiKey);
+    } else {
+      result = await callBuiltInAI();
+    }
     analysisInFlight = false;
     aiResult = result;
     isFallback = false;
@@ -744,6 +747,55 @@ async function retryAnalysis() {
     errEl.classList.add('show');
     document.getElementById('analyze-actions').style.display = 'block';
   }
+}
+
+// ==================== 內建 AI（透過 Worker /analyze 端點，無需用戶 Key） ====================
+async function callBuiltInAI() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+
+  // Build answers array
+  const ansArray = [];
+  for (let i = 0; i < 12; i++) {
+    ansArray.push(answers['q'+i] || '');
+  }
+
+  // Try Worker endpoints in order
+  const workerURLs = [];
+  const customURL = localStorage.getItem('bizcheck_api_url');
+  if (customURL) workerURLs.push(customURL.replace(/\/+$/, ''));
+  workerURLs.push('https://proud-fog-14c3.zdxilk.workers.dev');
+  workerURLs.push('http://localhost:8765');
+
+  let lastError = null;
+  for (const baseURL of workerURLs) {
+    try {
+      const resp = await fetch(baseURL + '/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: ansArray }),
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+
+      if (!resp.ok) {
+        const errBody = await resp.text().catch(() => '');
+        throw new Error(`Worker 錯誤 (${resp.status})：${errBody.slice(0,100)}`);
+      }
+
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      if (!data.scores || data.scores.length !== 12) throw new Error('AI 回傳的評分數據不完整');
+      return data;
+    } catch (e) {
+      lastError = e;
+      if (e.name === 'AbortError') throw new Error('請求超時，請稍後再試');
+      continue; // 嘗試下一個端點
+    }
+  }
+
+  clearTimeout(timeout);
+  throw lastError || new Error('無法連接內建 AI 服務');
 }
 
 function fallbackAnalysis() {
