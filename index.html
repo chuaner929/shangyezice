@@ -807,6 +807,7 @@ async function callAI(apiKey) {
   const proxyURLs = [];
   const customURL = localStorage.getItem('bizcheck_api_url');
   if (customURL) proxyURLs.push(customURL.replace(/\/+$/, ''));
+  proxyURLs.push('https://proud-fog-14c3.zdxilk.workers.dev'); // Cloudflare Worker
   proxyURLs.push('http://localhost:8765'); // 本地代理兜底
 
   const body = JSON.stringify({
