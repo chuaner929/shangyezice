@@ -1,11 +1,11 @@
-// Cloudflare Worker — 內建 AI 分析 + DeepSeek API 代理
-// 部署到 Cloudflare Workers 後，前端無需 API Key 即可使用 AI 分析
+// Cloudflare Worker — 內建 AI 分析
+// 部署到 Cloudflare Workers 後，用戶無需任何設定即可使用 AI 分析
 //
 // ⚠️ 重要：部署前請將下方的 DEEPSEEK_API_KEY 換成你自己的 Key
 //    所有使用者的 API 費用將由你的 DeepSeek 帳戶承擔
 //    deepseek-chat 目前定價極低（約 ¥1/百萬 token），一般用量每月幾元人民幣
 
-const DEEPSEEK_API_KEY = 'YOUR_DEEPSEEK_API_KEY_HERE'; // ← 改成你的 Key
+const DEEPSEEK_API_KEY = 'sk-27e04859d4a74648b664d0acc55cce43';
 
 const SYSTEM_PROMPT = `你是一位資深商業教練，精通「商業畫布」（Business Model Canvas）與「里程碑創業法」。
 你的任務是深度分析創業者對 12 個商業維度的回答，給出診斷、評分與具體行動指引。
@@ -77,14 +77,13 @@ export default {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Headers': 'Content-Type',
         }
       });
     }
 
-    // ===== 內建 AI 分析端點 =====
+    // 內建 AI 分析端點
     // POST /analyze  body: { answers: [...] }
-    // 由 Worker 構造 prompt、呼叫 DeepSeek、回傳結果
     if (request.method === 'POST' && url.pathname === '/analyze') {
       try {
         const { answers } = await request.json();
@@ -144,30 +143,6 @@ export default {
       }
     }
 
-    // ===== 通用代理（向後兼容，允許自帶 Key 的請求） =====
-    if (request.method === 'POST' && url.pathname.startsWith('/deepseek')) {
-      const apiPath = url.pathname.replace('/deepseek', '') || '/v1/chat/completions';
-      // 如果使用者自帶 Key 就用使用者的，否則用內建 Key
-      const auth = request.headers.get('Authorization') || ('Bearer ' + DEEPSEEK_API_KEY);
-      const deepseekReq = new Request('https://api.deepseek.com' + apiPath, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': auth,
-        },
-        body: request.body,
-      });
-
-      const resp = await fetch(deepseekReq);
-      const headers = new Headers(resp.headers);
-      headers.set('Access-Control-Allow-Origin', '*');
-
-      return new Response(resp.body, {
-        status: resp.status,
-        headers,
-      });
-    }
-
-    return new Response('BizCheck AI Worker. POST /analyze for built-in AI, or POST /deepseek/* for proxy.', { status: 404 });
+    return new Response('BizCheck AI Worker. POST /analyze for built-in AI analysis.', { status: 404 });
   }
 };

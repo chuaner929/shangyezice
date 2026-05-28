@@ -78,36 +78,6 @@ body::before{
   border:1px solid var(--border);
 }
 .wf-icon{font-size:1.2rem;flex-shrink:0}
-.api-status{font-size:0.8rem;color:var(--muted);margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px}
-.api-status-dot{width:8px;height:8px;border-radius:50%}
-.api-status-dot.set{background:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
-.api-status-dot.unset{background:var(--warn);box-shadow:0 0 6px var(--warn-glow)}
-
-/* ===== SETTINGS OVERLAY ===== */
-.overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;
-  background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
-  justify-content:center;align-items:center;padding:20px}
-.overlay.active{display:flex}
-.overlay-card{
-  background:rgba(18,38,32,0.95);backdrop-filter:blur(24px);
-  border:1px solid var(--border);border-radius:var(--radius);
-  box-shadow:0 16px 48px rgba(0,0,0,0.6);
-  padding:32px 24px;max-width:440px;width:100%
-}
-.overlay-title{font-size:1.05rem;font-weight:600;margin-bottom:6px}
-.overlay-desc{font-size:0.85rem;color:var(--muted);margin-bottom:18px;line-height:1.6}
-.input-field{
-  width:100%;padding:12px 15px;border-radius:var(--radius-sm);
-  background:rgba(0,0,0,0.3);border:1px solid var(--border);
-  color:var(--white);font-family:var(--font);font-size:0.9rem;
-  outline:none;transition:border-color 0.2s;
-}
-.input-field:focus{border-color:var(--accent)}
-.input-field::placeholder{color:var(--muted)}
-.overlay-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
-.key-hint{font-size:0.75rem;color:var(--muted);margin-top:8px;line-height:1.5}
-.key-hint a{color:var(--accent);text-decoration:none}
-.key-hint a:hover{text-decoration:underline}
 
 /* ===== QUIZ PAGE ===== */
 #page-quiz{padding-bottom:40px}
@@ -270,34 +240,10 @@ body::before{
     </div>
     <button class="btn btn-primary" onclick="startQuiz()">開始測評 →</button>
     <button class="btn btn-secondary btn-sm" onclick="startAutoFill()" style="margin-top:12px">⚡ 自動填充示範答案（每題15秒）</button>
-    <div class="api-status" id="api-status">
-      <span class="api-status-dot" id="api-dot"></span>
-      <span id="api-status-text">尚未設定 API Key</span>
-    </div>
-    <button class="btn btn-sm btn-secondary" style="margin-top:12px" onclick="openSettings()">設定 API Key</button>
+    <p style="font-size:0.8rem;color:var(--muted);margin-top:14px">內建 AI 分析 · 無需設定即可使用</p>
   </div>
 </div>
 
-<!-- ==================== SETTINGS OVERLAY ==================== -->
-<div class="overlay" id="settings-overlay">
-  <div class="overlay-card">
-    <div class="overlay-title">設定 API</div>
-    <div class="overlay-desc">本工具已內建 AI 分析，<strong>無需填寫 API Key 即可直接使用</strong>。如果你想用自己的 DeepSeek Key（節省費用），可在此填入。</div>
-    <input class="input-field" id="api-key-input" type="password" placeholder="sk-...（可選，留空使用內建 AI）">
-    <div style="margin-top:12px">
-      <label style="font-size:0.8rem;color:var(--muted)">自訂 API 代理地址（可選）</label>
-      <input class="input-field" id="api-url-input" type="text" placeholder="https://your-worker.workers.dev" style="margin-top:4px;font-size:0.85rem">
-    </div>
-    <div class="key-hint">
-      內建 AI 由 Cloudflare Worker 驅動，使用 DeepSeek 模型進行分析。<br>
-      如果你想用自己的 Key：前往 <a href="https://platform.deepseek.com/" target="_blank">DeepSeek 開放平台</a> 申請。
-    </div>
-    <div class="overlay-actions">
-      <button class="btn btn-sm btn-ghost" onclick="clearApiKey()">清除 Key</button>
-      <button class="btn btn-sm btn-ghost" onclick="closeSettings()">取消</button>
-      <button class="btn btn-sm btn-primary" onclick="saveApiKey()">儲存</button>
-    </div>
-  </div>
 </div>
 
 <!-- ==================== QUIZ PAGE ==================== -->
@@ -422,38 +368,6 @@ let dimScores = [];
 let aiResult = null;
 let isFallback = false;
 let analysisInFlight = false;
-
-// ==================== API KEY MANAGEMENT ====================
-function getApiKey() { return localStorage.getItem('bizcheck_api_key') || ''; }
-function setApiKey(k) { localStorage.setItem('bizcheck_api_key', k); updateApiStatus(); }
-function clearApiKey() { localStorage.removeItem('bizcheck_api_key'); document.getElementById('api-key-input').value=''; updateApiStatus(); }
-
-function updateApiStatus() {
-  const key = getApiKey();
-  const dot = document.getElementById('api-dot');
-  const txt = document.getElementById('api-status-text');
-  if (dot && txt) {
-    dot.className = 'api-status-dot ' + (key ? 'set' : 'unset');
-    txt.textContent = key ? 'API Key 已設定 · 使用自有 Key 分析' : '內建 AI 已啟用 · 無需設定即可使用';
-  }
-}
-
-function openSettings() {
-  document.getElementById('api-key-input').value = getApiKey();
-  document.getElementById('api-url-input').value = localStorage.getItem('bizcheck_api_url') || '';
-  document.getElementById('settings-overlay').classList.add('active');
-}
-function closeSettings() { document.getElementById('settings-overlay').classList.remove('active'); }
-function saveApiKey() {
-  const val = document.getElementById('api-key-input').value.trim();
-  if (val) setApiKey(val);
-  else clearApiKey();
-  const urlVal = document.getElementById('api-url-input').value.trim();
-  if (urlVal) localStorage.setItem('bizcheck_api_url', urlVal);
-  else localStorage.removeItem('bizcheck_api_url');
-  closeSettings();
-  updateApiStatus();
-}
 
 // ==================== PAGE SWITCHING ====================
 function switchPage(id) {
@@ -676,33 +590,25 @@ function stopAutoFill() {
 // ==================== SUBMIT & ANALYZE ====================
 async function submitAll() {
   saveCurrentAnswer();
-  const allAnswered = QUESTIONS.every((_, i) => answers['q'+i] && answers['q'+i].trim());
+  const allAnswered = QUESTIONS.every((_, i) => answers["q"+i] && answers["q"+i].trim());
   if (!allAnswered) {
-    const missing = QUESTIONS.findIndex((_, i) => !answers['q'+i] || !answers['q'+i].trim());
+    const missing = QUESTIONS.findIndex((_, i) => !answers["q"+i] || !answers["q"+i].trim());
     if (missing >= 0) {
       currentQ = missing;
       renderCurrentQuestion();
-      alert(`請先完成第 ${missing+1} 題的回答。`);
+      alert("請先完成第 " + (missing+1) + " 題的回答。");
       return;
     }
     return;
   }
 
-  const apiKey = getApiKey();
-  switchPage('analyzing');
-  document.getElementById('analyze-error').classList.remove('show');
-  document.getElementById('analyze-actions').style.display = 'none';
+  switchPage("analyzing");
+  document.getElementById("analyze-error").classList.remove("show");
+  document.getElementById("analyze-actions").style.display = "none";
   analysisInFlight = true;
 
   try {
-    let result;
-    if (apiKey) {
-      // User has own API key → use proxy approach
-      result = await callAI(apiKey);
-    } else {
-      // No API key → use Worker's built-in AI
-      result = await callBuiltInAI();
-    }
+    let result = await callBuiltInAI();
     analysisInFlight = false;
     aiResult = result;
     isFallback = false;
@@ -721,18 +627,12 @@ async function submitAll() {
 }
 
 async function retryAnalysis() {
-  document.getElementById('analyze-error').classList.remove('show');
-  document.getElementById('analyze-actions').style.display = 'none';
+  document.getElementById("analyze-error").classList.remove("show");
+  document.getElementById("analyze-actions").style.display = "none";
   analysisInFlight = true;
 
   try {
-    const apiKey = getApiKey();
-    let result;
-    if (apiKey) {
-      result = await callAI(apiKey);
-    } else {
-      result = await callBuiltInAI();
-    }
+    let result = await callBuiltInAI();
     analysisInFlight = false;
     aiResult = result;
     isFallback = false;
@@ -764,7 +664,7 @@ async function callBuiltInAI() {
   const workerURLs = [];
   const customURL = localStorage.getItem('bizcheck_api_url');
   if (customURL) workerURLs.push(customURL.replace(/\/+$/, ''));
-  workerURLs.push('https://proud-fog-14c3.zdxilk.workers.dev');
+  workerURLs.push('https://bizcheck-ai.zdxilk.workers.dev');
   workerURLs.push('http://localhost:8765');
 
   let lastError = null;
@@ -826,141 +726,9 @@ function fallbackAnalysis() {
   setTimeout(drawRadarChart, 300);
 }
 
-// ==================== AI API (DeepSeek) ====================
-async function callAI(apiKey) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000);
+`;
 
-  // Build user message with all Q&A
-  let userMsg = '以下是我對 12 個商業維度問題的回答：\n\n';
-  for (let i = 0; i < 12; i++) {
-    userMsg += `${i+1}. ${QUESTIONS[i].dim}：${answers['q'+i]}\n\n`;
-  }
-  userMsg += '請分析並給出評分和建議。';
-
-  const systemPrompt = `你是一位資深商業教練，精通「商業畫布」（Business Model Canvas）與「里程碑創業法」。
-你的任務是深度分析創業者對 12 個商業維度的回答，給出診斷、評分與具體行動指引。
-
-## 你使用的 12 維度框架（商業畫布 + 線上經營）
-
-1. **客戶定位**：目標客群的年齡/職業/收入/消費習慣/活躍平台。核心判斷：是否夠具體到能畫出一個「典型客戶畫像」？模糊的「所有人都是客戶」= 低分。
-2. **價值主張**：幫客戶解決什麼痛點？客戶有多痛？現有替代方案是什麼？核心判斷：客戶是否會因為這個痛點而「主動尋找解決方案」？
-3. **流量獲客**：透過什麼管道獲客？線上/線下比例？渠道穩定性？是否知道 CAC？核心判斷：流量來源是否可預測、可規模化，還是靠運氣？
-4. **成交轉化**：從接觸到付款的完整旅程，轉化率，流失點。核心判斷：是否有清晰的漏斗數據？知道哪個環節最弱？
-5. **交付體驗**：付款後如何送達？流程是否標準化？客戶滿意度如何？核心判斷：「你能不能在睡著的時候，服務仍然穩定交付？」
-6. **客戶維繫**：複購率、轉推薦率、主動維繫動作（社群/回訪/內容）。核心判斷：客戶是「一次性交易」還是「持續性關係」？
-7. **收入設計**：定價邏輯、產品梯隊、收入結構（單次/訂閱/續費）、利潤率。核心判斷：收入是否可預測？是否有「躺著也能賺」的現金流？
-8. **成本結構**：固定 vs 可變成本、單位經濟模型、盈虧平衡點。核心判斷：創始人是否清楚每賣一單賺多少錢？
-9. **核心資源**：不可替代的資源（人/技術/供應鏈/客戶關係/數字資產）。核心判斷：如果創始人休假一個月，生意會不會停擺？
-10. **關鍵動作**：每週最重要的 3 件事、時間分配。核心判斷：時間是否花在最高槓桿的事情上？還是忙於「看起來很忙」的事？
-11. **合作槓桿**：外部合作夥伴、外包環節、平台工具。核心判斷：創始人是否懂得「借力」？還是什麼都自己做？
-12. **數據迭代**：關鍵指標、數據回顧頻率、數據驅動決策的案例。核心判斷：決策是憑感覺還是憑數據？
-
-## 里程碑階段判斷標準
-
-- **創業探索期**（平均分 < 2.5）：還在驗證想法，客戶畫像模糊，沒有穩定收入
-- **雛形階段**（平均分 2.5-3.5）：已有初步客戶驗證，但流程未標準化，高度依賴創始人
-- **成長期**（平均分 3.5-4.5）：商業模式已驗證，開始規模化，需要建立系統和團隊
-- **成熟擴張期**（平均分 > 4.5）：模式穩定，可複製擴張，重點在生態和護城河
-
-## 評分標準（1-5）
-
-1 分：幾乎沒有思考過這個維度，或回答顯示嚴重缺失
-2 分：有初步意識但缺乏系統性，存在明顯漏洞
-3 分：有基本運作但未優化，處於「過得去」狀態
-4 分：有清晰策略和數據支撐，運作良好
-5 分：已形成競爭優勢，可以作為他人學習的標杆
-
-## 回覆格式
-
-請嚴格按以下 JSON 回覆（只回覆 JSON，不要其他文字）。每個維度的 advice 至少 3-4 句，要具體、可落地，不要雞湯式空話：
-
-{
-  "scores": [
-    {
-      "dim": "客戶定位",
-      "score": 3,
-      "analysis": "基於回答的詳細分析（2-3句，指出現狀評估和關鍵洞察）",
-      "weakness": "這個維度最關鍵的 1-2 個問題所在",
-      "advice": "具體可執行的改善建議（3-4句），包含可量化的目標或具體方法",
-      "milestone": "針對當前階段，這個維度的下一步里程碑任務（1-2句）"
-    }
-  ],
-  "overallTier": "雛形階段",
-  "overallAdvice": "綜合診斷（5-8句）：商業模式全景評價、當前階段的核心矛盾、接下來 90 天最該做的前 3 件事、潛在風險提醒",
-  "bottom2": [
-    { "dim": "維度名", "risk": "不改善的後果（1-2句）", "action": "立即改善的具體行動（2-3句）" }
-  ],
-  "top2": [
-    { "dim": "維度名", "leverage": "為什麼這是你的槓桿（1-2句）", "amplify": "如何進一步放大優勢（2-3句）" }
-  ],
-  "balanceNote": "分數分布判斷（長板驅動型／均衡型／有明顯短板需要注意），以及這對當前階段的影響",
-  "stageRoadmap": "根據你的當前階段，建議的 3 個里程碑節點（每節點 1-2 句），以及預計的時間線"
-}`;
-
-  // Build proxy endpoint list: user-configured → Worker → local → give up
-  const proxyURLs = [];
-  const customURL = localStorage.getItem('bizcheck_api_url');
-  if (customURL) proxyURLs.push(customURL.replace(/\/+$/, ''));
-  proxyURLs.push('https://proud-fog-14c3.zdxilk.workers.dev'); // Cloudflare Worker
-  proxyURLs.push('http://localhost:8765'); // 本地代理兜底
-
-  const body = JSON.stringify({
-    model: 'deepseek-chat',
-    max_tokens: 4096,
-    temperature: 0.7,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMsg }
-    ]
-  });
-
-  let lastError = null;
-  let resp = null;
-  for (const baseURL of proxyURLs) {
-    try {
-      resp = await fetch(baseURL + '/deepseek/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + apiKey
-        },
-        body,
-        signal: controller.signal
-      });
-      break; // 成功連線，跳出迴圈
-    } catch (e) {
-      lastError = e;
-      continue; // 嘗試下一個代理
-    }
-  }
-
-  clearTimeout(timeout);
-
-  if (!resp) {
-    // 所有代理都連不上
-    throw new Error('無法連接 API 代理，請確認已啟動本地代理（node api-proxy.js）或設定線上代理地址。將使用離線模式。');
-  }
-
-  if (!resp.ok) {
-    const errBody = await resp.text().catch(() => '');
-    if (resp.status === 401) throw new Error('API Key 無效，請檢查後重新設定');
-    if (resp.status === 429) throw new Error('請求過於頻繁，請稍後再試');
-    throw new Error(`API 錯誤 (${resp.status})：${errBody.slice(0,100)}`);
-  }
-
-  const data = await resp.json();
-  const content = data.choices?.[0]?.message?.content || '';
-  // Try to extract JSON from response (in case AI wraps it in ```json)
-  let jsonStr = content.trim();
-  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (jsonMatch) jsonStr = jsonMatch[1].trim();
-  const parsed = JSON.parse(jsonStr);
-
-  // Validate
-  if (!parsed.scores || parsed.scores.length !== 12) throw new Error('AI 回傳的評分數據不完整');
-  return parsed;
-}
+  
 
 // ==================== RESULT PAGE ====================
 function buildResultPage() {
@@ -1246,18 +1014,9 @@ function resetAndRestart() {
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
   switchPage('welcome');
-  updateApiStatus();
 
-  // Close overlay on backdrop click
-  document.getElementById('settings-overlay').addEventListener('click', function(e) {
-    if (e.target === this) closeSettings();
+  
   });
-
-  // Close overlay on Escape
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeSettings();
-  });
-});
 
 // Handle page unload warning
 window.addEventListener('beforeunload', function(e) {
