@@ -42,6 +42,7 @@ body::before{
   border:1px solid var(--border); border-radius:var(--radius);
   box-shadow:0 8px 40px rgba(0,0,0,0.5),inset 0 1px 0 var(--edge);
   padding:40px 32px; width:100%;
+  transform:translateZ(0); -webkit-transform:translateZ(0);
 }
 .glass-card-sm{padding:24px 20px}
 @media(max-width:480px){.glass-card{padding:28px 18px}}
@@ -52,6 +53,8 @@ body::before{
   font-family:var(--font);font-size:0.95rem;font-weight:600;
   padding:12px 28px;border-radius:99px;cursor:pointer;transition:all 0.25s;
   border:none;letter-spacing:0.03em;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+  user-select:none; -webkit-user-select:none;
 }
 .btn-primary{background:var(--accent);color:#042018;box-shadow:0 4px 20px var(--accent-glow)}
 .btn-primary:hover{background:#3de0b4;transform:translateY(-1px);box-shadow:0 6px 28px rgba(45,212,168,0.3)}
